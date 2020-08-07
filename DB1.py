@@ -1,6 +1,9 @@
 import sys
 import sqlite3
 import datetime
+import stringimport sys
+import sqlite3
+import datetime
 import string
 import random
 
@@ -197,9 +200,10 @@ def reading_content(web='to be inputted from user'):
 
 
 def update_content():
-    global dashes_
+    global dashes_, loop1
     with conn:
-        while True:
+        loop1 = True
+        while loop1:
             # displaying the current content for the inputted website using the reading_content function
             web = input('Website to update content for: ')
             print(dashes_)
@@ -237,6 +241,7 @@ def update_content():
                                 print(dashes + 'Content updated!' + dashes_)
                                 reading_content(web=web)
                                 print(dashes)
+                                loop1 = False
                                 break
 
                     if _type_.lower() == 'o':
