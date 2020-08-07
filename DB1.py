@@ -10,9 +10,9 @@ c = conn.cursor()
 
 
 # functions for creating and reading content
-def password_generator(length):
+def password_generator(length_):
     # count is the total length of password, we minus values from it in order to generate a password with this length
-    count = int(length)
+    count = int(length_)
     # we divide the whole length by 3 so that a maximum of a 1/3 of proportion can be given to letters
     stop = int(count / 2)
     password = []
@@ -50,68 +50,88 @@ def password_generator(length):
 
 
 def creating_content():
-    global dashes_
+    global dashes_, loop1, loop2, loop3, length, username, password_
+    loop1 = True
     # to generate a random password the length, username and website, while password is set to the generator function
-    pass_ = input('Use generated password (G)\nOwn password (O)')
-    # character length for the password generator are inputted and the generated password is generated
-    if pass_.lower() == 'g':
-        length = input('Character length of password: ')
-        username = input(dashes + 'Username: ')
-        password = password_generator(length)
-        print('Password: ' + str(password) + dashes_)
+    while loop1:
+        pass_ = input('Use generated password (G)\nOwn password (O)')
+        # character length for the password generator are inputted and the generated password is generated
+        if pass_.lower() == 'g':
+            length = input('Character length of password: ')
+            username = input(dashes + 'Username: ')
+            password_ = password_generator(length)
+            print('Password: ' + str(password_) + dashes_)
+            loop1 = False
+            loop2 = True
 
-        while True:
-            # another password is generated and displayed using the while loop until c is entered
-            another = input("Generate another password(G)\nContinue(C)")
-            if another.lower() == 'g':
-                password = password_generator(length)
-                print(dashes_ + '\nUsername: ' + username + '\nPassword: ' + str(password) + dashes_)
+        if pass_.lower() == 'o':
+            # details for the content are inputted manually and then added to the table
+            with conn:
+                username = input('Username: ')
+                password_ = input('Password: ')
+                website = input('Website: ')
+                today = datetime.date.today()
 
-            if another.lower() == 'c':
-                with conn:
-                    website = input('Website: ')
-                    # the date of entry is calculated using:
-                    today = datetime.date.today()
-                    # the values are added to the ROOT2 table and a success message is printed
-                    c.execute('INSERT INTO ROOT2 VALUES (?,?,?,?)', (username, password, website, today))
-                    print(dashes + f'({username}, {password}, {website}, {today})' + '\nContent successfully added!')
-                    break
+                c.execute('INSERT INTO ROOT2 VALUES (?,?,?,?)', (username, password_, website, today))
+                print(dashes + f'({username}, {password_}, {website}, {today}\n' + 'Content successfully added!')
+                loop1 = False
 
-    if pass_.lower() == 'o':
-        # details for the content are inputted manually and then added to the table
+    while loop2:
+        # another password is generated and displayed using the while loop until c is entered
+        another = input("Generate another password(G)\nContinue(C)")
+        if another.lower() == 'g':
+            password_ = password_generator(length)
+            print(dashes_ + '\nUsername: ' + username + '\nPassword: ' + str(password_) + dashes_)
+            continue
+
+        if another.lower() == 'c':
+            loop3 = True
+            loop2 = False
+
+    while loop3:
         with conn:
-            username = input('Username: ')
-            password = input('Password: ')
             website = input('Website: ')
+            # the date of entry is calculated using:
             today = datetime.date.today()
-
-            c.execute('INSERT INTO ROOT2 VALUES (?,?,?,?)', (username, password, website, today))
-            print(dashes + f'({username}, {password}, {website}, {today}\n' + 'Content successfully added!')
+            # the values are added to the ROOT2 table and a success message is printed
+            c.execute('INSERT INTO ROOT2 VALUES (?,?,?,?)', (username, password_, website, today))
+            print(dashes + f'({username}, {password_}, {website}, {today})' + '\nContent successfully added!')
+            loop3 = False
 
 
 def reading_content(web='to be inputted from user'):
-    while True:
-        global c
-        if web == 'to be inputted from user':
+    global c, loop1, loop2, loop3
+
+    if web == 'to be inputted from user':
+        loop1 = True
+
+        while loop1:
             specific_or_all = input(dashes + "Specific website(S)\nAll websites(A)")
 
             if specific_or_all.lower() == 's':
                 web_name = input(dashes + 'Website name: ')
+                print(dashes_)
 
                 # to check that this content exists, the table is checked, if None is returned process is restarted
                 c.execute("SELECT * FROM ROOT2 WHERE website=?", (str(web_name),))
                 data = c.fetchone()
 
                 if data is None:
-                    try_again = input('Entered website has not been found\nTry again (Y/N)')
-                    # the loop is restarted or broken depending on the input
-                    if try_again.lower() == 'y':
-                        continue
-                    if try_again.lower() == 'n':
-                        break
+                    loop2 = True
+                    while loop2:
+                        try_again = input('Entered website has not been found\nTry again (Y/N)')
+                        # the loop is restarted or broken depending on the input
+                        if try_again.lower() == 'y':
+                            loop2 = False
+                        if try_again.lower() == 'n':
+                            loop1 = False
+                            loop2 = False
+
                 # if the content is present it is displayed
                 else:
-                    return data
+                    loop1 = False
+                    return [print(row) for row in data]
+
             # fetching all of the data if this is wanted by the user
             if specific_or_all.lower() == 'a':
                 c.execute("SELECT * FROM ROOT2")
@@ -120,51 +140,60 @@ def reading_content(web='to be inputted from user'):
                 if all_data is None:
                     print('This table contains no data!')
                     # if there is no content, then the it is offered to create content
-                    create_content = input('Create content now (Y/N)')
-                    if create_content.lower() == 'y':
-                        creating_content()
-                        break
-                    else:
-                        break
+                    while True:
+                        create_content = input('Create content now (Y/N)')
+                        if create_content.lower() == 'y':
+                            creating_content()
+                            loop1 = False
+                            break
+                        else:
+                            loop1 = False
+                            break
                 else:
                     return [print(row) for row in all_data]
 
-        if web == 'all':
-            c.execute("SELECT * FROM ROOT2")
-            all_data = c.fetchall()
+    if web == 'all':
+        c.execute("SELECT * FROM ROOT2")
+        all_data = c.fetchall()
 
-            if all_data is None:
-                print('This table contains no data!')
-                # if there is no content, then the it is offered to create content
+        if all_data is None:
+            print('This table contains no data!')
+            # if there is no content, then the it is offered to create content
+            while True:
                 create_content = input('Create content now (Y/N)')
                 if create_content.lower() == 'y':
                     creating_content()
                     break
                 else:
                     break
-            else:
-                return [print(row) for row in all_data]
-
-            # else is added so that content can be seen when using the update and delete function
         else:
-            c.execute("SELECT * FROM ROOT2 WHERE Website=?", (str(web),))
-            data = c.fetchone()
+            return [print(row) for row in all_data]
 
-            if data is None:
+        # else is added so that content can be seen when using the update and delete function
+    else:
+        c.execute("SELECT * FROM ROOT2 WHERE Website=?", (str(web),))
+        data = c.fetchone()
+
+        if data is None:
+            loop3 = True
+            while loop3:
                 no_content = input('Entered website has not been found\nCreate content for this website(CC)\n'
                                    'Quit(Q)' + dashes_)
-                # as this part of the function is only used for the update and delete functions, if no content is found
-                # then option of creating content is presented which is then triggered by the creating content function
+                # as this part of the function is only used for the update and delete functions, if no content is
+                # found then option of creating content is presented which is then triggered by the creating
+                # content function
                 if no_content.lower() == 'cc':
                     creating_content()
-                    return 'creating content do not update'
+                    loop3 = False
+                    return 'creating content do not update/delete'
 
                 if no_content.lower() == 'q':
-                    break
-            # if the content is present it is displayed for the delete and update functions
-            else:
-                print('Current content:')
-                return data
+                    loop3 = False
+                    return 'user wants to quit after entering invalid website'
+        # if the content is present it is displayed for the delete and update functions
+        else:
+            print('Current content:')
+            return data
 
 
 def update_content():
@@ -175,9 +204,10 @@ def update_content():
             web = input('Website to update content for: ')
             print(dashes_)
             current = reading_content(web=web)
-            if current == 'creating content do not update':
+            if current == 'creating content do not update/delete':
                 break
-
+            if current == 'user wants to quit after entering invalid website':
+                break
             else:
                 print(current)
                 print(dashes)
@@ -280,15 +310,15 @@ def delete_content():
                 loop1 = False
                 loop2 = True
             if see.lower() == 'n':
-                break
+                loop1 = False
+                loop2 = True
             else:
                 continue
         # all the content is deleted in loop2
         while loop2:
             sure = input('Are you sure you want to delete ALL content (Y/N) ')
             if sure.lower() == 'y':
-                c.execute('SELECT * FROM ROOT2')
-                c.execute('TRUNCATE TABLE ROOT2')
+                c.execute('truncate table ROOT2')
                 return print('All content successfully deleted')
 
             if sure.lower() == 'n':
@@ -298,10 +328,15 @@ def delete_content():
         while loop3:
             web_name = input('Website to DELETE content for: ')
             print(dashes_)
-            reading_content(web=web_name)
+            current = reading_content(web=web_name)
             print(dashes)
-            loop3 = False
-            loop4 = True
+            if current == 'user wants to quit after entering invalid website':
+                loop3 = False
+            if current == 'creating content do not update/delete':
+                loop3 = False
+            else:
+                loop3 = False
+                loop4 = True
 
         # the row is deleted if the user is sure
         while loop4:
@@ -331,6 +366,9 @@ except sqlite3.OperationalError:
 dashes = '******************************\n'
 dashes_ = '\n******************************'
 action = ''
+password_ = ''
+length = ''
+username = ''
 first_time = 'first'
 loop1 = False
 loop2 = False
@@ -368,3 +406,4 @@ while running:
 
 conn.commit()
 conn.close()
+
