@@ -1,9 +1,6 @@
 import sys
 import sqlite3
 import datetime
-import stringimport sys
-import sqlite3
-import datetime
 import string
 import random
 
@@ -256,10 +253,7 @@ def update_content():
                 if which.lower() == 'u':
                     new_username = input(dashes + 'New username: ')
                     c.execute("""UPDATE ROOT2 SET username = (?) WHERE website = (?)""", (new_username, web))
-                    print(dashes + 'Content updated!' + dashes_)
-                    new_content = reading_content(web=web)
-                    print(new_content)
-                    print(dashes)
+                    return print(dashes + 'Content updated!' + dashes_)
 
 
 def again():
