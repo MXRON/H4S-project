@@ -1,5 +1,5 @@
 # H4S-project
-The project is a database that stores your 'content' (Username, Password, Date uploaded) for different websites. It has many functions including 1. Creating content 2. Updating content 3. Deleting content 4. Reading content
+The project is a database that stores your 'content' (Username, Password, website, Date uploaded) for different websites. It has many functions including 1. Creating content 2. Updating content 3. Deleting content 4. Reading content
 
 Every time content is created the option of generating a random password with any desired length is presented in order to provide more protection against cybe threats. The password consists of a random proportion of letter, numbers and symbols. The letters, numbers, and symbols are of course also random.
 
